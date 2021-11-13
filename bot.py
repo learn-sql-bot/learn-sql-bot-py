@@ -5,6 +5,7 @@ from aiogram.utils import executor
 
 from handlers.common import register_handlers_common
 from handlers.exercise import register_handlers_exercise
+from handlers.start import register_handlers_start
 from config import TOKEN
 
 
@@ -13,8 +14,10 @@ dp = Dispatcher(bot, storage=MemoryStorage())
 
 ### Регистируем обработчики
 
+register_handlers_start(dp)
 register_handlers_common(dp)
 register_handlers_exercise(dp)
+
 
 
 if __name__ == '__main__':
