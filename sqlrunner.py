@@ -22,6 +22,7 @@ class SQLRunner:
 
 
     def get_prettytable(self):
+
         self.cur.execute("SELECT * from user_details LIMIT 1")
         table: PrettyTable = from_db_cursor(self.cur)
         return str(table)
