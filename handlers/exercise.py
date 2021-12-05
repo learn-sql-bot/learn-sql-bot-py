@@ -1,14 +1,19 @@
 import re
+
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters import Text, IDFilter
-from aiogram.dispatcher.filters.state import State, StatesGroup
+
+import config
 from states import ExerciseState
 from services.ExerciseService import ExerciseService
-import config
 
 
-def parse_input_for_id(text:str) -> int:
+def parse_input_for_id(text: str) -> int:   # TODO вынести в хелперы или  отдельные функцйии общие для категорий и упражнений
+    """
+    Вытаскивает из строки завернутый в скобочки номер
+    :param text: Текст сообщения со скобочками
+    :return: Возвращает омер категории в виде числа
+    """
     p = re.compile(r'\[(.*?)\]')
     number = int(p.findall(text)[0])
     return number
@@ -23,7 +28,7 @@ async def cmd_select_exercise(message: types.Message, state: FSMContext):
     exercise_service = ExerciseService()
     exercise = exercise_service.get_exercise_instruction(ex_id)
 
-    if exercise:
+    if exercise:  # TODO тут переписать на хелперы или выгнести в сервисы
         await message.answer(exercise.get("title"))
         await message.answer(exercise.get("instruction"))
         await message.answer(f"``` \n{exercise.get('pretty')} \n```", parse_mode="Markdown")
@@ -49,28 +54,29 @@ async def cmd_check_solution(message: types.Message, state: FSMContext):
 
         user_result, solution_result = exercise_service.check_user_solution(ex_id, solution)
 
-
         if not user_result.errors:
             await message.answer(f"Запрос выполнен")
             await message.answer(f"``` \n{user_result.pretty} \n```", parse_mode="Markdown")
         else:
             await message.answer(f"Ошибка при выполнении")
             await message.answer("\n".join([str(e) for e in user_result.errors]), parse_mode="Markdown")
-            return ""
+            return Falst
 
         if not user_result.columns == solution_result.columns:
             await message.answer(f"Колонки не совпадают")
-            return ""
+            return False
 
         if not user_result.rows == solution_result.rows:
             await message.answer(f"Ряды не совпадают")
-            return ""
+            return False
 
-        await message.answer("Задача решена выбирайте следующую")
+        await message.answer("Задача решена выбирайте следующую /cats")
         await state.reset_state()
+        return True
 
     else:
         await message.answer("Что то пошло не так, вернитесь к /cats")
+        return False
 
 
 async def cmd_show_solution(message: types.Message, state: FSMContext):
@@ -90,4 +96,4 @@ def register_handlers_exercise(dp: Dispatcher):
     dp.register_message_handler(cmd_select_exercise, state=ExerciseState.select_exercise)
     dp.register_message_handler(cmd_show_solution, commands="ans", state=ExerciseState.exercise_solving)
     dp.register_message_handler(cmd_check_solution, state=ExerciseState.exercise_solving)
-    # dp.register_message_handler(secret_command, IDFilter(user_id=admin_id), commands="abracadabra")
+

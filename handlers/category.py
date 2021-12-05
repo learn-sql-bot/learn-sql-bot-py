@@ -1,22 +1,34 @@
 import re
+
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters import Text, IDFilter
+
+import config
 from states import ExerciseState
 from services.CategoryService import CategoryService
-import config
 
 
 def build_keyboard(items):
+    """
+    Собирает одноразовую клавиатурку для выбора категории
+    :param items: список строк
+    :return: объект айограма "клавиатура"
+    """
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     keyboard.add(*items)
     return keyboard
 
 
-def parse_input_for_id(text:str) -> int:
+def parse_input_for_id(text: str) -> int:
+    """
+    Вытаскивает из строки завернутый в скобочки номер
+    :param text: Текст сообщения со скобочками
+    :return: Возвращает омер категории в виде числа
+    """
     p = re.compile(r'\[(.*?)\]')
     number = int(p.findall(text)[0])
     return number
+
 
 async def cmd_all_categories(message: types.Message, state: FSMContext):
     """ Обрабатываем команду /cats, отдаем список всех категорий """
@@ -27,7 +39,6 @@ async def cmd_all_categories(message: types.Message, state: FSMContext):
 
     # строим клавиатуру из названий всех полученных категорий
     keyboard = build_keyboard([f"{cat.get('title')} [{cat.get('id')}]" for cat in cats])
-
 
     # Отправляем список пользователю
     await message.answer(f"Все категории",  reply_markup=keyboard, parse_mode="Markdown")
@@ -56,7 +67,10 @@ async def cmd_get_single_category(message: types.Message, state: FSMContext):
     if category_exercises:
 
         keyboard = build_keyboard([f"{e.get('title')} [{e.get('id')}]" for e in category_exercises])
-        await message.answer(f"Все задания на тему { category.get('title') }",  reply_markup=keyboard, parse_mode="Markdown")
+        await message.answer(
+            f"Все задания на тему { category.get('title') }",
+            reply_markup=keyboard,
+            parse_mode="Markdown")
 
         # Переходим в режим выбора упражнения
         await state.set_state(ExerciseState.select_exercise)
@@ -68,7 +82,9 @@ async def cmd_get_single_category(message: types.Message, state: FSMContext):
         await message.answer(f"state: { await state.get_state()}")
 
 
-
 def register_handlers_category(dp: Dispatcher):
+    # Обрабатывать запрос /cats и показывать категории
     dp.register_message_handler(cmd_all_categories, commands="cats", state="*")
+    # Обрабатывать запрос на показывание одной категории
     dp.register_message_handler(cmd_get_single_category,  state=ExerciseState.select_topic)
+

@@ -4,6 +4,7 @@ from config import DBPATH
 
 
 class ExerciseDataProvider:
+    """ Поставщик данных об упражнениях """
 
     def __init__(self):
 
@@ -25,7 +26,7 @@ class ExerciseDataProvider:
     def get_exercise_by_id(self, ex_id: int) -> dict:
         """ Возвращает полную информацию об упражнении по его id"""
 
-        columns: list = ["id", "title", "instruction", "sql_base", "sql_solution"]
+        columns: list = ["id", "title", "instruction", "sql_base", "sql_solution", "tables"]
         query: str = f"SELECT { ', '.join(columns) } from exercises where id = { ex_id } LIMIT 1"
         result = self.cur.execute(query)  # TODO add type
         exercise_data: list = self.cur.fetchone()

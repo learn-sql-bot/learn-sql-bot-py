@@ -1,16 +1,19 @@
 import sqlite3
-from sqlite3 import Connection, OperationalError
+from sqlite3 import Connection, OperationalError, Cursor
 from prettytable import PrettyTable
 from dataclasses import dataclass
 
 
 @dataclass
 class SQLRunnerResult:
-    executed: bool
-    rows: list = None
-    columns: list = None
-    errors: list = None
-    pretty: str = ""
+    """ Результат выполнения запроса
+    """
+
+    executed: bool          #  Выполнен ли запрос
+    rows: list = None       #  Список стобцов
+    columns: list = None    #  Список названий колонок
+    errors: list = None     #  Cписок ошибок
+    pretty: str = ""        #  Текстовое представление таблички с результатом
 
 
     def has_errors(self) -> bool:
@@ -19,13 +22,16 @@ class SQLRunnerResult:
 
 class SQLRunner:
 
+    """ Выполняет SQL операции, например, устанавливает дамп, выполняет запрос, рисует табличку
+    """
+
     def __init__(self):
 
         self.connect: Connection = sqlite3.connect(':memory:')  # Подключаемся к БД
         self.cur = self.connect.cursor()          # Запускаем курсор, с помощью которого мы будем получать данные из БД
         self.query_result: SQLRunnerResult = SQLRunnerResult(False)
 
-    def install_dump(self, query):
+    def install_dump(self, query) -> Cursor:
         """ Загружает дамп из файла в базу чтобы использовать в упражнении"""
         result = self.cur.executescript(query) # Выполняем запрос с помощью курсора
         return result
@@ -54,13 +60,13 @@ class SQLRunner:
             rows=rows, columns=columns, executed=True, errors=[]
         )
 
-        # Билдим преттитейбл
+        # Создаем преттитейбл
         self.get_prettytable()
 
         # Отдаем готовый датакласс
         return self.query_result
 
-    def get_prettytable(self) -> str:
+    def get_prettytable(self) -> str:   # TODO переименовать в build_prettytable и перестать отдавать результат, хранить табличку в датаклассе
         """ Рисует красивую аски-табличку, данные берет из объекта ответа"""
 
         result: SQLRunnerResult = self.query_result
@@ -75,7 +81,4 @@ class SQLRunner:
         self.query_result.pretty = pretty
 
         return pretty
-
-
-
 

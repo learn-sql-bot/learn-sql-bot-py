@@ -4,6 +4,7 @@ from config import DBPATH
 
 
 class CategoryDataProvider:
+    """ Поставщик данных о категориях """
 
     def __init__(self):
 
