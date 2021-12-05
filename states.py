@@ -5,7 +5,5 @@ class ExerciseState(StatesGroup):
 
     select_topic = State()
     select_exercise = State()
-
     exercise_solving = State()
-    exercise_checking = State()
     exercise_complete = State()
