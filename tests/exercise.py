@@ -1,6 +1,6 @@
 from dataprovider import DataProviderLocal
-from classes.sqlrunner import SQLRunnerResult
 
+from classes.sqlrunner import SQLRunnerResult
 
 
 def test_exercise():

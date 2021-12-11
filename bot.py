@@ -3,19 +3,31 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
 
-from handlers.exercise import register_handlers_exercise
-from handlers.category import register_handlers_category
 from config import TOKEN
+from handlers.category import register_handlers_category
+from handlers.exercise import register_handlers_exercise
 
 
-bot = Bot(token=TOKEN)
-dp = Dispatcher(bot, storage=MemoryStorage())
+def create_bot(token=None):
 
-### Регистируем обработчики
+    bot: Bot = Bot(token)
+    dp: Dispatcher = Dispatcher(bot, storage=MemoryStorage())
 
-register_handlers_category(dp)
-register_handlers_exercise(dp)
+    ### Регистируем обработчики
 
+    register_handlers_category(dp)
+    register_handlers_exercise(dp)
+
+    return bot, dp
+
+
+def run(executor, dp):
+
+    print("bot is running")
+    executor.start_polling(dp)  # начинаем получать запросики
+
+
+bot, dp = create_bot(TOKEN)
 
 if __name__ == '__main__':
-    executor.start_polling(dp)
+    run(executor, dp)

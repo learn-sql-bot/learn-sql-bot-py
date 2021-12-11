@@ -1,5 +1,5 @@
-from dataproviders.ExerciseDataProvider import ExerciseDataProvider
 from classes.sqlrunner import SQLRunner, SQLRunnerResult
+from dataproviders.ExerciseDataProvider import ExerciseDataProvider
 
 
 class ExerciseService:

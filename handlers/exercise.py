@@ -4,8 +4,8 @@ from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 
 import config
-from states import ExerciseState
 from services.ExerciseService import ExerciseService
+from states import ExerciseState
 
 
 def parse_input_for_id(text: str) -> int:   # TODO вынести в хелперы или  отдельные функцйии общие для категорий и упражнений

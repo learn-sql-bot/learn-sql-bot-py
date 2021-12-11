@@ -1,4 +1,5 @@
 from dataprovider import DataProvider
+
 #
 # data = DataProvider.fetch_exercises_by_topic("SELECT")
 # print(data)

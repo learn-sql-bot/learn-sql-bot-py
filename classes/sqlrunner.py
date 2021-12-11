@@ -1,7 +1,8 @@
 import sqlite3
-from sqlite3 import Connection, OperationalError, Cursor
-from prettytable import PrettyTable
 from dataclasses import dataclass
+from sqlite3 import Connection, Cursor, OperationalError
+
+from prettytable import PrettyTable
 
 
 @dataclass

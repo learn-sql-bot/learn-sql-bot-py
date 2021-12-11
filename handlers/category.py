@@ -4,8 +4,8 @@ from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 
 import config
-from states import ExerciseState
 from services.CategoryService import CategoryService
+from states import ExerciseState
 
 
 def build_keyboard(items):
@@ -85,6 +85,7 @@ async def cmd_get_single_category(message: types.Message, state: FSMContext):
 def register_handlers_category(dp: Dispatcher):
     # Обрабатывать запрос /cats и показывать категории
     dp.register_message_handler(cmd_all_categories, commands="cats", state="*")
+    dp.register_message_handler(cmd_all_categories, commands="start", state="*")
     # Обрабатывать запрос на показывание одной категории
     dp.register_message_handler(cmd_get_single_category,  state=ExerciseState.select_topic)
 

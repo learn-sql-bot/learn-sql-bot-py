@@ -1,4 +1,5 @@
 import pytest
+
 from dataproviders.CategoryDataProvider import CategoryDataProvider
 
 
