@@ -16,7 +16,7 @@ class ExerciseService:
     def get_exercise_instruction(self, ex_id: int):
         """ Вытаскивает информацию о задании, возвращает данные для отгрузки пользователю
         """
-        exercise = self.exercise_data_provider.get_exercise_object(ex_id)
+        exercise = self.exercise_data_provider.get_by_id(ex_id)
 
         # Здесь заводим базу
         sql_base = exercise.sql_base

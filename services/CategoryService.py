@@ -24,7 +24,7 @@ class CategoryService:
         """ Возвращает одну категорию со списком упражнений"""
 
         category = self.category_provider.get_by_id(cat_id)
-        exercises = self.exercise_provider.get_exercises_objects_from_category(cat_id)
+        exercises = self.exercise_provider.get_by_category(cat_id)
         category.exercises = exercises
 
         return category
