@@ -1,3 +1,4 @@
+from classes.exercise import Exercise
 from classes.sqlrunner import SQLRunner, SQLRunnerResult
 from dataproviders.ExerciseDataProvider import ExerciseDataProvider
 
@@ -15,20 +16,14 @@ class ExerciseService:
     def get_exercise_instruction(self, ex_id: int):
         """ Вытаскивает информацию о задании, возвращает данные для отгрузки пользователю
         """
-        exercise = self.exercise_data_provider.get_exercise_by_id(ex_id)
+        exercise = self.exercise_data_provider.get_exercise_object(ex_id)
 
         # Здесь заводим базу
-
-        sql_base = exercise.get("sql_base")
+        sql_base = exercise.sql_base
         self.sql_runner.install_dump(sql_base)
 
-        # Здесь рисуем структурку таблицы
-        # TODO вынести в датапровайдер и sqlrunner, выводить все таблички, не только первую
-        tables = [table.strip() for table in exercise.get("tables").split(",")]
-        print(exercise.get("tables"))
-        query = f"SELECT * from `{ tables[0] }` LIMIT 2"
-        result = self.sql_runner.run_query(query)
-        exercise['pretty'] = f"Таблица {tables[0]} \n {result.pretty}"
+        # Здесь рисуем структуру таблицы
+        exercise.pretty = self._get_pretty_tables(exercise)
 
         return exercise
 
@@ -42,7 +37,7 @@ class ExerciseService:
 
         # Выполняем запрос
         user_result: SQLRunnerResult = self.sql_runner.run_query(user_query)
-        solution_result: SQLRunnerResult = self.sql_runner.run_query(exercise.get("sql_solution"))
+        solution_result: SQLRunnerResult = self.sql_runner.run_query(exercise.sql_solution)
 
         return user_result, solution_result
 
@@ -50,6 +45,13 @@ class ExerciseService:
 
         # Заводим базу
         exercise = self.get_exercise_instruction(ex_id)
-        solution_result: SQLRunnerResult = self.sql_runner.run_query(exercise.get("sql_solution"))
+        solution_result: SQLRunnerResult = self.sql_runner.run_query(exercise.sql_solution)
 
         return solution_result
+
+    def _get_pretty_tables(self, exercise: Exercise):
+
+        tables = exercise.tables
+        query = f"SELECT * from `{ tables[0] }` LIMIT 2"
+        result = self.sql_runner.run_query(query)
+        return f"Таблица {tables[0]} \n {result.pretty}"

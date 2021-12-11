@@ -2,6 +2,7 @@ from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 
 import config
+from classes.exercise import Exercise
 from classes.sqlrunner import SQLRunnerResult
 from handlers.handler_helpers import parse_input_for_id
 from services.ExerciseService import ExerciseService
@@ -72,11 +73,11 @@ async def cmd_show_solution(message: types.Message, state: FSMContext):
 
     exercise_service = ExerciseService()
     state_data = await state.get_data()
-    ex_id = state_data.get("ex_id")
-    exercise = exercise_service.get_exercise_instruction(ex_id)
+    ex_id: int = state_data.get("ex_id")
+    exercise: Exercise = exercise_service.get_exercise_instruction(ex_id)
 
     await message.answer(f"Ответ на задачу {ex_id}:")
-    await message.answer(exercise.get("sql_solution"))
+    await message.answer(exercise.sql_solution)
 
 
 async def cmd_show_example(message: types.Message, state: FSMContext):
@@ -89,11 +90,11 @@ async def cmd_show_example(message: types.Message, state: FSMContext):
     await message.answer(f"``` \n{result.pretty} \n```", parse_mode="Markdown")
 
 
-async def send_exercise_instruction(message: types.Message, exercise: dict) -> None:
+async def send_exercise_instruction(message: types.Message, exercise: Exercise) -> None:
 
-    await message.answer(exercise.get("title"))
-    await message.answer(exercise.get("instruction"))
-    await message.answer(f"``` \n{exercise.get('pretty')} \n```", parse_mode="Markdown")
+    await message.answer(exercise.title)
+    await message.answer(exercise.instruction)
+    await message.answer(f"``` \n{exercise.pretty} \n```", parse_mode="Markdown")
     await message.answer("Отправьте SQL в ответе, /show – показать ожидаемую табличку, /cats   меню, /ans – сдаться")
 
 
