@@ -1,33 +1,10 @@
-import re
-
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 
 import config
+from handlers.handler_helpers import build_keyboard, parse_input_for_id
 from services.CategoryService import CategoryService
 from states import ExerciseState
-
-
-def build_keyboard(items):
-    """
-    Собирает одноразовую клавиатурку для выбора категории
-    :param items: список строк
-    :return: объект айограма "клавиатура"
-    """
-    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-    keyboard.add(*items)
-    return keyboard
-
-
-def parse_input_for_id(text: str) -> int:
-    """
-    Вытаскивает из строки завернутый в скобочки номер
-    :param text: Текст сообщения со скобочками
-    :return: Возвращает омер категории в виде числа
-    """
-    p = re.compile(r'\[(.*?)\]')
-    number = int(p.findall(text)[0])
-    return number
 
 
 async def cmd_all_categories(message: types.Message, state: FSMContext):
@@ -82,7 +59,10 @@ async def cmd_get_single_category(message: types.Message, state: FSMContext):
         await message.answer(f"state: { await state.get_state()}")
 
 
+
+
 def register_handlers_category(dp: Dispatcher):
+
     # Обрабатывать запрос /cats и показывать категории
     dp.register_message_handler(cmd_all_categories, commands="cats", state="*")
     dp.register_message_handler(cmd_all_categories, commands="start", state="*")

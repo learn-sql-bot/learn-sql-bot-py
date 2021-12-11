@@ -1,22 +1,11 @@
-import re
-
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 
 import config
+from classes.sqlrunner import SQLRunnerResult
+from handlers.handler_helpers import parse_input_for_id
 from services.ExerciseService import ExerciseService
 from states import ExerciseState
-
-
-def parse_input_for_id(text: str) -> int:   # TODO вынести в хелперы или  отдельные функцйии общие для категорий и упражнений
-    """
-    Вытаскивает из строки завернутый в скобочки номер
-    :param text: Текст сообщения со скобочками
-    :return: Возвращает омер категории в виде числа
-    """
-    p = re.compile(r'\[(.*?)\]')
-    number = int(p.findall(text)[0])
-    return number
 
 
 async def cmd_select_exercise(message: types.Message, state: FSMContext):
@@ -28,13 +17,12 @@ async def cmd_select_exercise(message: types.Message, state: FSMContext):
     exercise_service = ExerciseService()
     exercise = exercise_service.get_exercise_instruction(ex_id)
 
-    if exercise:  # TODO тут переписать на хелперы или выгнести в сервисы
-        await message.answer(exercise.get("title"))
-        await message.answer(exercise.get("instruction"))
-        await message.answer(f"``` \n{exercise.get('pretty')} \n```", parse_mode="Markdown")
-        await message.answer("Отправьте SQL в ответе, /show – показать ожидаемую табличку, /cats   меню, /ans – сдаться")
+    if exercise:
+
+        await send_exercise_instruction(message, exercise)
         await state.set_state(ExerciseState.exercise_solving)
         await state.set_data({"ex_id": ex_id})
+
     else:
         await message.answer("Такого упражнения не нашлось, давайте еще раз?")
 
@@ -60,7 +48,7 @@ async def cmd_check_solution(message: types.Message, state: FSMContext):
         else:
             await message.answer(f"Ошибка при выполнении")
             await message.answer("\n".join([str(e) for e in user_result.errors]), parse_mode="Markdown")
-            return Falst
+            return False
 
         if not user_result.columns == solution_result.columns:
             await message.answer(f"Колонки не совпадают")
@@ -91,9 +79,28 @@ async def cmd_show_solution(message: types.Message, state: FSMContext):
     await message.answer(exercise.get("sql_solution"))
 
 
+async def cmd_show_example(message: types.Message, state: FSMContext):
+    """ Показываем табличку ответ (кусочек)"""
+    exercise_service = ExerciseService()
+
+    state_data = await state.get_data()
+    ex_id = state_data.get("ex_id")
+    result: SQLRunnerResult = exercise_service.show_example(ex_id)
+    await message.answer(f"``` \n{result.pretty} \n```", parse_mode="Markdown")
+
+
+async def send_exercise_instruction(message: types.Message, exercise: dict) -> None:
+
+    await message.answer(exercise.get("title"))
+    await message.answer(exercise.get("instruction"))
+    await message.answer(f"``` \n{exercise.get('pretty')} \n```", parse_mode="Markdown")
+    await message.answer("Отправьте SQL в ответе, /show – показать ожидаемую табличку, /cats   меню, /ans – сдаться")
+
+
 def register_handlers_exercise(dp: Dispatcher):
 
     dp.register_message_handler(cmd_select_exercise, state=ExerciseState.select_exercise)
     dp.register_message_handler(cmd_show_solution, commands="ans", state=ExerciseState.exercise_solving)
+    dp.register_message_handler(cmd_show_example, commands="show", state=ExerciseState.exercise_solving)
     dp.register_message_handler(cmd_check_solution, state=ExerciseState.exercise_solving)
 

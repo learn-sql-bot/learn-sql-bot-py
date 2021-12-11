@@ -10,12 +10,12 @@ class ExerciseService:
     def __init__(self):
 
         self.sql_runner = SQLRunner()
+        self.exercise_data_provider = ExerciseDataProvider()
 
     def get_exercise_instruction(self, ex_id: int):
         """ Вытаскивает информацию о задании, возвращает данные для отгрузки пользователю
         """
-        exercise_data_provider = ExerciseDataProvider()
-        exercise = exercise_data_provider.get_exercise_by_id(ex_id)
+        exercise = self.exercise_data_provider.get_exercise_by_id(ex_id)
 
         # Здесь заводим базу
 
@@ -45,3 +45,11 @@ class ExerciseService:
         solution_result: SQLRunnerResult = self.sql_runner.run_query(exercise.get("sql_solution"))
 
         return user_result, solution_result
+
+    def show_example(self, ex_id: int) -> SQLRunnerResult:
+
+        # Заводим базу
+        exercise = self.get_exercise_instruction(ex_id)
+        solution_result: SQLRunnerResult = self.sql_runner.run_query(exercise.get("sql_solution"))
+
+        return solution_result
