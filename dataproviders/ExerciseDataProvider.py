@@ -1,6 +1,8 @@
 import sqlite3
 from sqlite3 import Connection, Cursor
 
+from typing import List
+
 from classes.exercise import Exercise
 from config import DBPATH
 
@@ -53,7 +55,7 @@ class ExerciseDataProvider:
 
         return exercise
 
-    def get_exercises_objects_from_category(self, cat_id: int) -> list:
+    def get_exercises_objects_from_category(self, cat_id: int) -> List[Exercise]:
 
         """ Возвращает упражнения из категории по ее id в формате списка словарей """
 

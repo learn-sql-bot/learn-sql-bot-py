@@ -1,53 +1,48 @@
 import sqlite3
 from sqlite3 import Connection
 
+from typing import List
+
 from config import DBPATH
+from classes.category import Category
 
 
 class CategoryDataProvider:
     """ Поставщик данных о категориях """
 
-    def __init__(self):
+    def __init__(self, db_path=None):
+
+        if not db_path:
+            db_path = DBPATH
 
         # Подключаемся к БД
-        self.connect: Connection = sqlite3.connect(DBPATH)
+        self.connect: Connection = sqlite3.connect(db_path)
 
         # Запускаем курсор, с помощью которого мы будем получать данные из БД
         self.cur = self.connect.cursor()
 
-    def get_categories(self) -> list:
-        """Получает все категории, сортирует по порядку, отдает в формте списка словарей с ключами id, code, title"""
+    def get_all(self) -> List[Category]:
 
-        columns: list = ["id", "code", "title"]
-        sql: str = f"SELECT { ','.join(columns)}  from categories order by `order`"
+        """ Возвращает все категории в виде датаклассов """
+
+        sql = f"SELECT id, code, title, `order` " \
+              f"FROM categories "
+
         result = self.cur.execute(sql)
-        category: list = [dict(zip(columns, row)) for row in self.cur.fetchall()]
-        return category
+        categories_data = self.cur.fetchall()
+        categories = [Category(*cat) for cat in categories_data]
+        return categories
 
-    def get_category_by_id(self, cat_id: int) -> dict:
+    def get_by_id(self, cat_id: int) -> Category:
+        """ Возвращает объект категории (в виде датакласса) пол ее ID"""
 
-        # Колонки, которые нам понадобятся
-        column_names = ["id", "code", "title"]
+        sql = f"SELECT id, code, title, `order` " \
+              f"FROM categories " \
+              f"WHERE id={cat_id}"
 
-        # Запрос, который получит колонки
-        sql = f"select { ', '.join(column_names) } from categories where id={cat_id}"
         result = self.cur.execute(sql)
-        # Получаем одну строчку из ответа
         category_data = self.cur.fetchone()
 
-        # Возвращаем вместо кортежа словарь
-        return dict(zip(column_names, category_data))
+        return Category(*category_data)
 
-    def get_category_by_code(self, code: str) -> dict:
 
-        # Колонки, которые нам понадобятся
-        column_names = ["id", "code", "title"]
-
-        # Запрос, который получит колонки
-        sql = f"select { ', '.join(column_names) } from categories where code='{code}'"
-        result = self.cur.execute(sql)
-        # Получаем одну строчку из ответа
-        category_data = self.cur.fetchone()
-
-        # Возвращаем вместо кортежа словарь
-        return dict(zip(column_names, category_data))

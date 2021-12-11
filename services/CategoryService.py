@@ -1,3 +1,6 @@
+from typing import List
+
+from classes.category import Category
 from dataproviders.CategoryDataProvider import CategoryDataProvider
 from dataproviders.ExerciseDataProvider import ExerciseDataProvider
 
@@ -12,18 +15,18 @@ class CategoryService:
         self.category_provider = CategoryDataProvider()
         self.exercise_provider = ExerciseDataProvider()
 
-    def all_categories(self) -> list:
+    def all_categories(self) -> List[Category]:
         """ Возвращает список категорий """
-        categories = self.category_provider.get_categories()
+        categories = self.category_provider.get_all()
         return categories
 
-    def get_category(self, cat_id: int) -> dict:
+    def get_category(self, cat_id: int) -> Category:
         """ Возвращает одну категорию со списком упражнений"""
 
-        category = self.category_provider.get_category_by_id(cat_id)
-        exercises = self.exercise_provider.get_exercises_from_category(cat_id)
+        category = self.category_provider.get_by_id(cat_id)
+        exercises = self.exercise_provider.get_exercises_objects_from_category(cat_id)
+        category.exercises = exercises
 
-        category['exercises'] = exercises
         return category
 
 

@@ -1,7 +1,11 @@
+from typing import List
+
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 
 import config
+from classes.category import Category
+from classes.exercise import Exercise
 from handlers.handler_helpers import build_keyboard, parse_input_for_id
 from services.CategoryService import CategoryService
 from states import ExerciseState
@@ -11,11 +15,11 @@ async def cmd_all_categories(message: types.Message, state: FSMContext):
     """ Обрабатываем команду /cats, отдаем список всех категорий """
 
     # Получаем список всех категорий
-    category_service = CategoryService()
-    cats = category_service.all_categories()
+    category_service: CategoryService = CategoryService()
+    cats: List[Category] = category_service.all_categories()
 
     # строим клавиатуру из названий всех полученных категорий
-    keyboard = build_keyboard([f"{cat.get('title')} [{cat.get('id')}]" for cat in cats])
+    keyboard = build_keyboard([f"{cat.title} [{cat.id}]" for cat in cats])
 
     # Отправляем список пользователю
     await message.answer(f"Все категории",  reply_markup=keyboard, parse_mode="Markdown")
@@ -35,17 +39,18 @@ async def cmd_get_single_category(message: types.Message, state: FSMContext):
 
     # Обрабатываем ввод и вытаскиваем цифру из скобочек
     input_text: str = message.text
-    cat_id = parse_input_for_id(input_text)
+    cat_id: int = parse_input_for_id(input_text)
 
-    category = category_service.get_category(cat_id)
-    category_exercises = category.get("exercises")
+    category: Category = category_service.get_category(cat_id)
+
+    exercises: List[Exercise] = category.exercises
 
     # Если упражнение какое нибудь есть
-    if category_exercises:
+    if exercises:
 
-        keyboard = build_keyboard([f"{e.get('title')} [{e.get('id')}]" for e in category_exercises])
+        keyboard = build_keyboard([f"{e.title} [{e.id}]" for e in exercises])
         await message.answer(
-            f"Все задания на тему { category.get('title') }",
+            f"Все задания на тему { category.title }",
             reply_markup=keyboard,
             parse_mode="Markdown")
 
@@ -57,8 +62,6 @@ async def cmd_get_single_category(message: types.Message, state: FSMContext):
 
     if config.DEBUG:
         await message.answer(f"state: { await state.get_state()}")
-
-
 
 
 def register_handlers_category(dp: Dispatcher):
