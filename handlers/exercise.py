@@ -45,7 +45,7 @@ class ExerciseHandler:
 
         if ex_id:
 
-            self.logger.log(f"Запрошена проверка решения {ex_id}", message=message)
+            self.logger.log(f"Запрошена проверка решения {ex_id}", message=message, state=state)
 
             user_result, solution_result = exercise_service.check_user_solution(ex_id, solution)
 
@@ -67,7 +67,7 @@ class ExerciseHandler:
 
             await message.answer("Задача решена выбирайте следующую /cats")
             await state.reset_state()
-            self.logger.log(f"Решена задача {ex_id}", message=message)
+            self.logger.log(f"Решена задача {ex_id}", message=message, state=state)
             return True
 
         else:
@@ -80,6 +80,9 @@ class ExerciseHandler:
         exercise_service = ExerciseService()
         state_data = await state.get_data()
         ex_id: int = state_data.get("ex_id")
+
+
+
         exercise: Exercise = exercise_service.get_exercise_instruction(ex_id)
 
         await message.answer(f"Ответ на задачу {ex_id}:")
@@ -101,13 +104,15 @@ class ExerciseHandler:
         await message.answer(f"``` \n{exercise.pretty} \n```", parse_mode="Markdown")
         await message.answer("Отправьте SQL в ответе, /show – показать ожидаемую табличку, /cats   меню, /ans – сдаться")
 
-xhandler = ExerciseHandler()
+
 
 
 def register_handlers_exercise(dp: Dispatcher):
 
-    dp.register_message_handler(xhandler.select_exercise, state=ExerciseState.select_exercise)
-    dp.register_message_handler(xhandler.show_solution, commands="ans", state=ExerciseState.exercise_solving)
-    dp.register_message_handler(xhandler.show_example, commands="show", state=ExerciseState.exercise_solving)
-    dp.register_message_handler(xhandler.check_solution, state=ExerciseState.exercise_solving)
+    x_handler = ExerciseHandler()
+
+    dp.register_message_handler(x_handler.select_exercise, state=ExerciseState.select_exercise)
+    dp.register_message_handler(x_handler.show_solution, commands="ans", state=ExerciseState.exercise_solving)
+    dp.register_message_handler(x_handler.show_example, commands="show", state=ExerciseState.exercise_solving)
+    dp.register_message_handler(x_handler.check_solution, state=ExerciseState.exercise_solving)
 
