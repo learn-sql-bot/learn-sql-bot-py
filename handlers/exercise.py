@@ -1,7 +1,6 @@
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 
-import config
 from classes.exercise import Exercise
 from classes.sqlrunner import SQLRunnerResult
 from handlers.handler_helpers import parse_input_for_id
@@ -15,7 +14,6 @@ class ExerciseHandler:
     def __init__(self):
         self.logger = Logger()
 
-
     async def select_exercise(self, message: types.Message, state: FSMContext):
         """ Обрабатываем команду выбора задания"""
 
@@ -27,15 +25,15 @@ class ExerciseHandler:
 
         if exercise:
 
-            await self.send_exercise_instruction(message, exercise)
+            await self._send_exercise_instruction(message, exercise)
             await state.set_state(ExerciseState.exercise_solving)
             await state.set_data({"ex_id": ex_id})
+            self.logger.log(f"Выбрано упражнение {ex_id}", message=message)
 
         else:
             await message.answer("Такого упражнения не нашлось, давайте еще раз?")
+            self.logger.log(f"Попытка найти упражнение {ex_id}, не найдено", message=message)
 
-        if config.DEBUG:
-            await message.answer(f"state: { await state.get_state()}")
 
     async def check_solution(self,message: types.Message, state: FSMContext):
         """ Обрабатываем отправленное решение """
@@ -46,6 +44,8 @@ class ExerciseHandler:
         ex_id = state_data.get("ex_id")
 
         if ex_id:
+
+            self.logger.log(f"Запрошена проверка решения {ex_id}", message=message)
 
             user_result, solution_result = exercise_service.check_user_solution(ex_id, solution)
 
@@ -67,6 +67,7 @@ class ExerciseHandler:
 
             await message.answer("Задача решена выбирайте следующую /cats")
             await state.reset_state()
+            self.logger.log(f"Решена задача {ex_id}", message=message)
             return True
 
         else:
@@ -93,13 +94,12 @@ class ExerciseHandler:
         result: SQLRunnerResult = exercise_service.show_example(ex_id)
         await message.answer(f"``` \n{result.pretty} \n```", parse_mode="Markdown")
 
-    async def send_exercise_instruction(self, message: types.Message, exercise: Exercise) -> None:
+    async def _send_exercise_instruction(self, message: types.Message, exercise: Exercise) -> None:
 
         await message.answer(exercise.title)
         await message.answer(exercise.instruction)
         await message.answer(f"``` \n{exercise.pretty} \n```", parse_mode="Markdown")
         await message.answer("Отправьте SQL в ответе, /show – показать ожидаемую табличку, /cats   меню, /ans – сдаться")
-
 
 xhandler = ExerciseHandler()
 
