@@ -54,4 +54,4 @@ class ExerciseService:
         tables = exercise.tables
         query = f"SELECT * from `{ tables[0] }` LIMIT 2"
         result = self.sql_runner.run_query(query)
-        return f"Таблица {tables[0]} \n{result.pretty} (показаны 2 строки)"
+        return f"Таблица {tables[0]} \n{result.pretty}\n(показаны 2 строки)"
