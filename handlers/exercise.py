@@ -67,7 +67,7 @@ class ExerciseHandler:
                 return False
 
             await message.answer("Задача решена! Следующая: /next , В меню: /cats")
-            await state.reset_state()
+            # await state.reset_state()
             self.logger.log(f"Решена задача {ex_id}", message=message, state=state)
             return True
 
