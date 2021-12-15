@@ -52,6 +52,8 @@ class CategoryHandler:
 
         category: Category = category_service.get_category(cat_id)
 
+        await state.set_data({"cat_id": cat_id})
+
         exercises: List[Exercise] = category.exercises
 
         # Если упражнение какое нибудь есть

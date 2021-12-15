@@ -51,6 +51,27 @@ class ExerciseDataProvider:
 
         return exercises
 
+    def get_next_id_from_category(self, ex_id: int) -> int:
+
+        """ Возвращает номер следующего упражнения из категории, основываясь на order
+            Если такого упражнения нет (например, это было последнее), возвращает 0
+        """
+
+        query: str = f"SELECT `category` from `exercises` where `id` = { ex_id }"
+        self.cur.execute(query)
+        exercise_data: tuple = self.cur.fetchone()
+        cat_id = exercise_data[0] if exercise_data else 0
+
+        query: str = f"SELECT `id` " \
+                     f"FROM exercises " \
+                     f"WHERE category = { cat_id } " \
+                     f"AND `order` > (SELECT `order` FROM exercises where `id` = { ex_id }) " \
+                     f"ORDER by `order` " \
 
 
+        self.cur.execute(query)
+        next_data: tuple = self.cur.fetchone()
+        next_id: int = int(next_data[0]) if next_data else 0
+
+        return next_id
 

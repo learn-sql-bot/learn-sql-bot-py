@@ -27,6 +27,14 @@ class ExerciseService:
 
         return exercise
 
+    def get_next_id_from_category(self, ex_id: int) -> int:
+        """ Получает id следующего по порядку упражнения вну®три категории"""
+
+        exercise_id: int = self.exercise_data_provider.get_next_id_from_category(ex_id)
+
+        return exercise_id
+
+
     def check_user_solution(self, ex_id: int, user_query: str) -> (SQLRunnerResult, SQLRunnerResult):
         """ Проверяет решение пользователя, возвращает два результата запроса
             Внутри каждого - результат, красивая табличка,
@@ -55,3 +63,5 @@ class ExerciseService:
         query = f"SELECT * from `{ tables[0] }` LIMIT 2"
         result = self.sql_runner.run_query(query)
         return f"Таблица {tables[0]} \n{result.pretty}\n(показаны 2 строки)"
+
+

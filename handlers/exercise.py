@@ -13,15 +13,16 @@ class ExerciseHandler:
 
     def __init__(self):
         self.logger = Logger()
+        self.exercise_service = ExerciseService()
 
-    async def select_exercise(self, message: types.Message, state: FSMContext):
+    async def select_exercise(self, message: types.Message, state: FSMContext, ex_id=None):
         """ Обрабатываем команду выбора задания"""
 
-        input_text: str = message.text
-        ex_id = parse_input_for_id(input_text)
+        if not ex_id:
+            input_text: str = message.text
+            ex_id = parse_input_for_id(input_text)
 
-        exercise_service = ExerciseService()
-        exercise = exercise_service.get_exercise_instruction(ex_id)
+        exercise = self.exercise_service.get_exercise_instruction(ex_id)
 
         if exercise:
 
@@ -39,7 +40,7 @@ class ExerciseHandler:
         """ Обрабатываем отправленное решение """
 
         solution: str = message.text
-        exercise_service = ExerciseService()
+
         state_data = await state.get_data()
         ex_id = state_data.get("ex_id")
 
@@ -47,7 +48,7 @@ class ExerciseHandler:
 
             self.logger.log(f"Запрошена проверка решения {ex_id}", message=message, state=state)
 
-            user_result, solution_result = exercise_service.check_user_solution(ex_id, solution)
+            user_result, solution_result = self.exercise_service.check_user_solution(ex_id, solution)
 
             if not user_result.errors:
                 await message.answer(f"Запрос выполнен")
@@ -65,7 +66,7 @@ class ExerciseHandler:
                 await message.answer(f"Ряды не совпадают")
                 return False
 
-            await message.answer("Задача решена выбирайте следующую /cats")
+            await message.answer("Задача решена! Следующая: /next , В меню: /cats")
             await state.reset_state()
             self.logger.log(f"Решена задача {ex_id}", message=message, state=state)
             return True
@@ -77,25 +78,37 @@ class ExerciseHandler:
     async def show_solution(self, message: types.Message, state: FSMContext):
         """ Показываем ответ если пользователь сдается """
 
-        exercise_service = ExerciseService()
         state_data = await state.get_data()
         ex_id: int = state_data.get("ex_id")
 
-
-
-        exercise: Exercise = exercise_service.get_exercise_instruction(ex_id)
+        exercise: Exercise = self.exercise_service.get_exercise_instruction(ex_id)
 
         await message.answer(f"Ответ на задачу {ex_id}:")
         await message.answer(exercise.sql_solution)
 
     async def show_example(self, message: types.Message, state: FSMContext):
         """ Показываем табличку ответ (кусочек)"""
-        exercise_service = ExerciseService()
 
         state_data = await state.get_data()
         ex_id = state_data.get("ex_id")
-        result: SQLRunnerResult = exercise_service.show_example(ex_id)
+        result: SQLRunnerResult = self.exercise_service.show_example(ex_id)
         await message.answer(f"``` \n{result.pretty} \n```", parse_mode="Markdown")
+
+    async def show_next(self, message: types.Message, state: FSMContext):
+        """ Показываем табличку ответ (кусочек)"""
+
+        state_data = await state.get_data()
+        ex_id: int = state_data.get("ex_id")
+
+        next_id: int = self.exercise_service.get_next_id_from_category(ex_id)
+
+        if next_id:
+            return await self.select_exercise(message, state, next_id)
+        else:
+            await message.answer(f"Это последнее упражнение, вернитесь к /cats")
+
+
+
 
     async def _send_exercise_instruction(self, message: types.Message, exercise: Exercise) -> None:
 
@@ -112,7 +125,10 @@ def register_handlers_exercise(dp: Dispatcher):
     x_handler = ExerciseHandler()
 
     dp.register_message_handler(x_handler.select_exercise, state=ExerciseState.select_exercise)
+
     dp.register_message_handler(x_handler.show_solution, commands="ans", state=ExerciseState.exercise_solving)
     dp.register_message_handler(x_handler.show_example, commands="show", state=ExerciseState.exercise_solving)
+    dp.register_message_handler(x_handler.show_next, commands="next", state=ExerciseState.exercise_solving)
+
     dp.register_message_handler(x_handler.check_solution, state=ExerciseState.exercise_solving)
 
