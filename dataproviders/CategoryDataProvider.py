@@ -1,7 +1,7 @@
 import sqlite3
 from sqlite3 import Connection
 
-from typing import List
+from typing import List, Optional
 
 from config import DBPATH
 from classes.category import Category
@@ -22,7 +22,6 @@ class CategoryDataProvider:
         self.cur = self.connect.cursor()
 
     def get_all(self) -> List[Category]:
-
         """ Возвращает все категории в виде датаклассов """
 
         sql = f"SELECT id, code, title, `order` " \
@@ -34,7 +33,7 @@ class CategoryDataProvider:
         return categories
 
     def get_by_id(self, cat_id: int) -> Category:
-        """ Возвращает объект категории (в виде датакласса) пол ее ID"""
+        """ Возвращает объект категории (в виде датакласса) по ее ID"""
 
         sql = f"SELECT id, code, title, `order` " \
               f"FROM categories " \
@@ -45,4 +44,20 @@ class CategoryDataProvider:
 
         return Category(*category_data)
 
+    def get_by_title(self, title: str) -> Optional[Category]:
+        """ Возвращает объект категории (в виде датакласса) по ее ID или None
+        """
+        sql = f"SELECT id, code, title, `order` " \
+              f"FROM categories " \
+              f"WHERE title='{title}'"
 
+        print(sql)
+
+        result = self.cur.execute(sql)
+
+        category_data = self.cur.fetchone()
+
+        if not category_data:
+            return None
+
+        return Category(*category_data)

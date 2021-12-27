@@ -21,7 +21,9 @@ class CategoryService:
         return categories
 
     def get_category(self, cat_id: int) -> Category:
-        """ Возвращает одну категорию со списком упражнений"""
+        """
+        Возвращает одну категорию со списком упражнений по id
+        """
 
         category = self.category_provider.get_by_id(cat_id)
         exercises = self.exercise_provider.get_by_category(cat_id)
@@ -29,4 +31,14 @@ class CategoryService:
 
         return category
 
+    def get_category_by_title(self, title: str) -> Category:
+        """
+        Возвращает одну категорию со списком упражнений по ее названию
+        """
 
+        category = self.category_provider.get_by_title(title)
+        cat_id = category.id
+        exercises = self.exercise_provider.get_by_category(cat_id)
+        category.exercises = exercises
+
+        return category

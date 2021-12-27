@@ -7,8 +7,9 @@ import config
 from classes.category import Category
 from classes.exercise import Exercise
 from classes.logger import Logger
-from handlers.handler_helpers import build_keyboard, parse_input_for_id
+from handlers.handler_helpers import build_keyboard, build_wide_keyboard, parse_input_for_title
 from services.CategoryService import CategoryService
+from services.ResponseFormatter import ResponseFormatter
 from states import ExerciseState
 
 
@@ -16,6 +17,8 @@ class CategoryHandler:
 
     def __init__(self):
         self.logger = Logger()
+        self.category_service = CategoryService()
+        self.formatter = ResponseFormatter()
 
     async def all_categories(self, message: types.Message, state: FSMContext):
         """ Обрабатываем команду /cats, отдаем список всех категорий """
@@ -23,52 +26,48 @@ class CategoryHandler:
         self.logger.log(f"Запрошен список категорий ", message=message, state=state)
 
         # Получаем список всех категорий
-        category_service: CategoryService = CategoryService()
-        cats: List[Category] = category_service.all_categories()
+        cats: List[Category] = self.category_service.all_categories()
 
-        # строим клавиатуру из названий всех полученных категорий
-        keyboard = build_keyboard([f"{cat.title} [{cat.id}]" for cat in cats])
+        # собираем сообщение и клавиатуру
+        response, keyboard = self.formatter.all_categories(cats)
 
-        # Отправляем список пользователю
-        await message.answer(f"Все категории",  reply_markup=keyboard, parse_mode="Markdown")
+        # Отправляем ответ пользователю
+        await message.answer(response,  reply_markup=keyboard, parse_mode="Markdown")
 
         # Переходим в режим прием
         await state.set_state(ExerciseState.select_topic)
 
-        if config.DEBUG:
-            await message.answer(f"state: { await state.get_state()}")
+
 
     async def get_single_category(self, message: types.Message, state: FSMContext):
-        """ Обрабатываем выбор варианта категори"""
+        """ Обрабатываем выбор варианта категории
+        Выводим описание категории и список заданий
+        """
 
-        # Подключаем бизнес логику
-        category_service = CategoryService()
+        self.logger.log(f"Запрошены задачи категории {message.text}", message=message, state=state)
 
-        # Обрабатываем ввод и вытаскиваем цифру из скобочек
-        input_text: str = message.text
-        cat_id: int = parse_input_for_id(input_text)
+        # Обрабатываем ввод и вытаскиваем название
+        cat_title: str = parse_input_for_title(message.text)
 
-        self.logger.log(f"Запрошены задачи категории {cat_id}", message=message, state=state)
+        # Получаем датакласс категории
+        category: Category = self.category_service.get_category_by_title(cat_title)
 
-        category: Category = category_service.get_category(cat_id)
-
-        await state.set_data({"cat_id": cat_id})
-
-        exercises: List[Exercise] = category.exercises
+        await state.set_data({"cat_id": category.id})
 
         # Если упражнение какое нибудь есть
-        if exercises:
 
-            keyboard = build_keyboard([f"{e.title} [{e.id}]" for e in exercises])
-            await message.answer(
-                f"Все задания на тему { category.title }",
-                reply_markup=keyboard,
-                parse_mode="Markdown")
+        if category.exercises:
 
+            # Выводим упражнения с кнопочками
+            response, keyboard = self.formatter.single_category(category)
             # Переходим в режим выбора упражнения
             await state.set_state(ExerciseState.select_exercise)
 
+            # Отправляем ответ пользователю
+            await message.answer(response,  reply_markup=keyboard, parse_mode="Markdown")
+
         else:
+
             await message.answer(f"Заданий в этой категории пока нет, выберите другую")
 
 

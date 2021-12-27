@@ -1,5 +1,6 @@
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
+from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardButton
 
 from classes.exercise import Exercise
 from classes.sqlrunner import SQLRunnerResult
@@ -19,8 +20,7 @@ class ExerciseHandler:
         """ Обрабатываем команду выбора задания"""
 
         if not ex_id:
-            input_text: str = message.text
-            ex_id = parse_input_for_id(input_text)
+            ex_id = message.text
 
         exercise = self.exercise_service.get_exercise_instruction(ex_id)
 
@@ -108,16 +108,22 @@ class ExerciseHandler:
             await message.answer(f"Это последнее упражнение, вернитесь к /cats")
 
 
-
-
     async def _send_exercise_instruction(self, message: types.Message, exercise: Exercise) -> None:
 
-        await message.answer(exercise.title)
-        await message.answer(exercise.instruction)
+        await message.answer(exercise.title+"\n\n"+exercise.instruction)
         await message.answer(f"``` \n{exercise.pretty} \n```", parse_mode="Markdown")
         await message.answer("Отправьте SQL в ответе, /show – показать ожидаемую табличку, /cats   меню, /ans – сдаться")
 
 
+# async def test_show(message: types.Message, state: FSMContext):
+#
+#     inline_btn_1 = InlineKeyboardButton('Первая кнопка!', callback_data='button1')
+#     inline_kb1 = InlineKeyboardMarkup().add(inline_btn_1)
+#     await message.answer("Кнопочки будут туть", reply_markup=inline_kb1)
+#
+# async def test_query(callback_query: types.CallbackQuery):
+#     await callback_query.answer("Я работаю")
+#     return True
 
 
 def register_handlers_exercise(dp: Dispatcher):
@@ -132,3 +138,7 @@ def register_handlers_exercise(dp: Dispatcher):
 
     dp.register_message_handler(x_handler.check_solution, state=ExerciseState.exercise_solving)
 
+    # # Тестируем инлайн кнопки
+    #
+    # dp.register_message_handler(test_show, commands="test", state="*")
+    # dp.register_callback_query_handler(test_query, lambda callback_query: True)
